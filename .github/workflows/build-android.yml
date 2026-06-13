@@ -34,19 +34,20 @@ jobs:
       - name: Build Web Application
         run: npm run build
 
-      - name: Initialize Clean Capacitor Android Framework
+      - name: Initialize Capacitor Android Framework
         run: |
-          rm -rf android
-          npx cap add android
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
 
       - name: Inject Custom Overlay Code and Service Parameters
         run: node android-setup.cjs
 
-      - name: Sync Capacitor Files to Android Assets
-        run: npx cap sync android
-
       - name: Set Execution Permission for Gradle Wrapper
         run: chmod +x android/gradlew
+
+      - name: Sync Capacitor Files to Android Assets
+        run: npx cap sync android
 
       - name: Compile and Build Debug APK
         run: |
