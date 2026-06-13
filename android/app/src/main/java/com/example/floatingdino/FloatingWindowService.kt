@@ -101,18 +101,18 @@ class FloatingWindowService : Service() {
             private var initialTouchY = 0f
 
             override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-                event?.let {
-                    when (it.action) {
+                if (event != null) {
+                    when (event.action) {
                         MotionEvent.ACTION_DOWN -> {
                             initialX = params.x
                             initialY = params.y
-                            initialTouchX = it.rawX
-                            initialTouchY = it.rawY
+                            initialTouchX = event.rawX
+                            initialTouchY = event.rawY
                             return true
                         }
                         MotionEvent.ACTION_MOVE -> {
-                            params.x = initialX + (it.rawX - initialTouchX).toInt()
-                            params.y = initialY + (it.rawY - initialTouchY).toInt()
+                            params.x = initialX + (event.rawX - initialTouchX).toInt()
+                            params.y = initialY + (event.rawY - initialTouchY).toInt()
                             windowManager.updateViewLayout(floatingView, params)
                             return true
                         }
