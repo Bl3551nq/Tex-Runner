@@ -265,6 +265,13 @@ class MainActivity : BridgeActivity() {
 fs.writeFileSync(path.join(packageDir, 'MainActivity.kt'), mainActivityContent);
 console.log('✅ Overwrote MainActivity.kt with Custom Overlay behavior');
 
+// Delete duplicate MainActivity.java if it exists to prevent duplicate class definition compilation errors
+const javaActivityPath = path.join(packageDir, 'MainActivity.java');
+if (fs.existsSync(javaActivityPath)) {
+  fs.unlinkSync(javaActivityPath);
+  console.log('✅ Deleted duplicate MainActivity.java');
+}
+
 // 5. Update AndroidManifest.xml with permission and service declaration
 const manifestPath = path.join(androidPath, 'app/src/main/AndroidManifest.xml');
 let manifest = fs.readFileSync(manifestPath, 'utf8');
@@ -292,5 +299,33 @@ if (!manifest.includes('FloatingWindowService')) {
 
 fs.writeFileSync(manifestPath, manifest);
 console.log('✅ Configured AndroidManifest.xml');
+
+// 6. Support Kotlin build plugin in root build.gradle
+const rootBuildGradlePath = path.join(androidPath, 'build.gradle');
+if (fs.existsSync(rootBuildGradlePath)) {
+  let rootGradle = fs.readFileSync(rootBuildGradlePath, 'utf8');
+  if (!rootGradle.includes('kotlin-gradle-plugin')) {
+    rootGradle = rootGradle.replace(
+      "dependencies {",
+      "dependencies {\n        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22'"
+    );
+    fs.writeFileSync(rootBuildGradlePath, rootGradle);
+    console.log('✅ Added Kotlin classpath to root build.gradle');
+  }
+}
+
+// 7. Apply kotlin-android plugin in app/build.gradle
+const appBuildGradlePath = path.join(androidPath, 'app/build.gradle');
+if (fs.existsSync(appBuildGradlePath)) {
+  let appGradle = fs.readFileSync(appBuildGradlePath, 'utf8');
+  if (!appGradle.includes("apply plugin: 'kotlin-android'") && !appGradle.includes("id 'org.jetbrains.kotlin.android'")) {
+    appGradle = appGradle.replace(
+      "apply plugin: 'com.android.application'",
+      "apply plugin: 'com.android.application'\napply plugin: 'kotlin-android'"
+    );
+    fs.writeFileSync(appBuildGradlePath, appGradle);
+    console.log('✅ Applied kotlin-android plugin in app/build.gradle');
+  }
+}
 
 console.log('☀️ Customized setup completed successfully!');
