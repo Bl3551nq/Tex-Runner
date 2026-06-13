@@ -34,6 +34,15 @@ jobs:
       - name: Build Web Application
         run: npm run build
 
+      - name: Initialize Capacitor Android Framework
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
+      - name: Inject Custom Overlay Code and Service Parameters
+        run: node android-setup.cjs
+
       - name: Sync Capacitor Files to Android Assets
         run: npx cap sync android
 
