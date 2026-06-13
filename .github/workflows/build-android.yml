@@ -43,6 +43,11 @@ jobs:
       - name: Inject Custom Overlay Code and Service Parameters
         run: node android-setup.cjs
 
+      - name: Regenerate Gradle Wrapper to fix corrupt jar
+        run: |
+          cd android
+          gradle wrapper --gradle-version 8.14.3
+
       - name: Set Execution Permission for Gradle Wrapper
         run: chmod +x android/gradlew
 
