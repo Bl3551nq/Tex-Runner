@@ -1,0 +1,60 @@
+name: Build Floating Dino Android APK
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    name: Build Floating Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Build Web Application
+        run: npm run build
+
+      - name: Install and Add Capacitor Android Framework
+        run: |
+          npx cap add android || echo "Android folder already initialized"
+
+      - name: Inject Custom Overlay Code and Service Parameters
+        run: node android-setup.cjs
+
+      - name: Sync Capacitor Files to Android Assets
+        run: npx cap sync android
+
+      - name: Set Execution Permission for Gradle Wrapper
+        run: chmod +x android/gradlew
+
+      - name: Compile and Build Debug APK
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Upload Floating Dino Overlay APK Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Floating-Dino-Overlay-App
+          path: android/app/build/outputs/apk/debug/app-debug.apk
