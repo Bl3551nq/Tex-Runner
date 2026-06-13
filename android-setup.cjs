@@ -282,7 +282,7 @@ const permissions = `
     <uses-permission android:name="android.permission.INTERNET" />
 `;
 if (!manifest.includes('SYSTEM_ALERT_WINDOW')) {
-  manifest = manifest.replace('<manifest', '<manifest' + permissions);
+  manifest = manifest.replace('xmlns:android="http://schemas.android.com/apk/res/android">', 'xmlns:android="http://schemas.android.com/apk/res/android">' + permissions);
 }
 
 // Insert background service element inside <application>
