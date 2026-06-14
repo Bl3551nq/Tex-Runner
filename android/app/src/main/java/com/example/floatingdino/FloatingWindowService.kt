@@ -69,6 +69,8 @@ class FloatingWindowService : Service() {
             loadWithOverviewMode = true
             cacheMode = WebSettings.LOAD_DEFAULT
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            allowFileAccess = true
+            allowContentAccess = true
         }
 
         webView.webViewClient = object : WebViewClient() {
