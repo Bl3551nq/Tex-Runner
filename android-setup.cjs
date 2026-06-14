@@ -141,6 +141,17 @@ class FloatingWindowService : Service() {
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             allowFileAccess = true
             allowContentAccess = true
+            allowFileAccessFromFileURLs = true
+            allowUniversalAccessFromFileURLs = true
+        }
+
+        webView.webChromeClient = object : android.webkit.WebChromeClient() {
+            override fun onConsoleMessage(consoleMessage: android.webkit.ConsoleMessage?): Boolean {
+                if (consoleMessage != null) {
+                    android.util.Log.d("FloatingDinoWebView", "\${consoleMessage.message()} -- From line \${consoleMessage.lineNumber()} of \${consoleMessage.sourceId()}")
+                }
+                return true
+            }
         }
 
         webView.webViewClient = object : WebViewClient() {
