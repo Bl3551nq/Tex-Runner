@@ -116,6 +116,7 @@ class FloatingWindowService : Service() {
                             windowManager.updateViewLayout(floatingView, params)
                             return true
                         }
+                        else -> {}
                     }
                 }
                 return false
