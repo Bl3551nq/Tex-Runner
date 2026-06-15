@@ -4,6 +4,8 @@ import { ObstacleType, CloudType, ParticleType } from '../types';
 import { 
   drawPixelSprite, 
   DINO_STATIC, DINO_RUN1, DINO_RUN2, DINO_DUCK1, DINO_DUCK2,
+  GODZILLA_STATIC, GODZILLA_RUN1, GODZILLA_RUN2, GODZILLA_DUCK1, GODZILLA_DUCK2,
+  DOG_STATIC, DOG_RUN1, DOG_RUN2, DOG_DUCK1, DOG_DUCK2,
   CACTUS_SMALL, CACTUS_LARGE,
   BIRD_WINGS_UP, BIRD_WINGS_DOWN,
   CLOUD
@@ -52,11 +54,12 @@ interface GameCanvasProps {
   setScore: React.Dispatch<React.SetStateAction<number>>;
   highScore: number;
   setHighScore: (score: number) => void;
-  gameState: 'idle' | 'playing' | 'paused' | 'gameover';
-  setGameState: React.Dispatch<React.SetStateAction<'idle' | 'playing' | 'paused' | 'gameover'>>;
+  gameState: 'idle' | 'playing' | 'paused' | 'gameover' | 'victory';
+  setGameState: React.Dispatch<React.SetStateAction<'idle' | 'playing' | 'paused' | 'gameover' | 'victory'>>;
   isNightMode: boolean;
   setIsNightMode: (night: boolean) => void;
   isSystemDarkMode: boolean;
+  selectedCharacter: 'trex' | 'zilla' | 'dog';
 }
 
 export default function GameCanvas({
@@ -68,7 +71,8 @@ export default function GameCanvas({
   setGameState,
   isNightMode,
   setIsNightMode,
-  isSystemDarkMode
+  isSystemDarkMode,
+  selectedCharacter
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -84,6 +88,7 @@ export default function GameCanvas({
     highScore,
     isNightMode,
     isSystemDarkMode,
+    character: selectedCharacter,
     gameSpeed: 6,
     dinoY: 0,
     dinoVy: 0,
@@ -112,6 +117,10 @@ export default function GameCanvas({
   useEffect(() => {
     stateRef.current.isSystemDarkMode = isSystemDarkMode;
   }, [isSystemDarkMode]);
+
+  useEffect(() => {
+    stateRef.current.character = selectedCharacter;
+  }, [selectedCharacter]);
 
   const resumeGame = () => {
     const s = stateRef.current;
@@ -185,6 +194,8 @@ export default function GameCanvas({
     } else if (s.gameState === 'idle') {
       resetGame();
     } else if (s.gameState === 'gameover') {
+      resetGame();
+    } else if (s.gameState === 'victory') {
       resetGame();
     } else if (s.gameState === 'paused') {
       resumeGame();
@@ -310,8 +321,19 @@ export default function GameCanvas({
           s.score += 1;
           setScore(s.score);
 
-          // Beep on multiples of 100 points
-          if (s.score > 0 && s.score % 100 === 0) {
+          // Stop at level 10 (score reaches 2000, i.e. 10 levels of 200 points completed)
+          if (s.score >= 2000) {
+            s.score = 2000;
+            setScore(2000);
+            s.gameState = 'victory';
+            setGameState('victory');
+            playMilestoneSound();
+            if (s.score > s.highScore) {
+              s.highScore = s.score;
+              setHighScore(s.score);
+            }
+          } else if (s.score > 0 && s.score % 100 === 0) {
+            // Beep on multiples of 100 points
             playMilestoneSound();
             s.flashScoreTimer = 50; // flash score for several frames
           }
@@ -538,7 +560,7 @@ export default function GameCanvas({
         }
       });
 
-      // Render Dinosaur character
+      // Render Dinosaur or other selected character
       const isStatic = s.gameState === 'idle';
       const isFootSwingFrame = s.frameCount % 10 < 5;
       const dPixelSize = 5.2;
@@ -547,12 +569,33 @@ export default function GameCanvas({
       const dinoActualY = groundY - dinoHeight + s.dinoY;
 
       let dinoSprite = DINO_STATIC;
-      if (s.isDucking) {
-        dinoSprite = isFootSwingFrame ? DINO_DUCK1 : DINO_DUCK2;
-      } else if (s.isJumping || isStatic) {
-        dinoSprite = DINO_STATIC;
+      const char = s.character || 'trex';
+
+      if (char === 'zilla') {
+        if (s.isDucking) {
+          dinoSprite = isFootSwingFrame ? GODZILLA_DUCK1 : GODZILLA_DUCK2;
+        } else if (s.isJumping || isStatic) {
+          dinoSprite = GODZILLA_STATIC;
+        } else {
+          dinoSprite = isFootSwingFrame ? GODZILLA_RUN1 : GODZILLA_RUN2;
+        }
+      } else if (char === 'dog') {
+        if (s.isDucking) {
+          dinoSprite = isFootSwingFrame ? DOG_DUCK1 : DOG_DUCK2;
+        } else if (s.isJumping || isStatic) {
+          dinoSprite = DOG_STATIC;
+        } else {
+          dinoSprite = isFootSwingFrame ? DOG_RUN1 : DOG_RUN2;
+        }
       } else {
-        dinoSprite = isFootSwingFrame ? DINO_RUN1 : DINO_RUN2;
+        // Fallback to classic trex dino
+        if (s.isDucking) {
+          dinoSprite = isFootSwingFrame ? DINO_DUCK1 : DINO_DUCK2;
+        } else if (s.isJumping || isStatic) {
+          dinoSprite = DINO_STATIC;
+        } else {
+          dinoSprite = isFootSwingFrame ? DINO_RUN1 : DINO_RUN2;
+        }
       }
 
       drawPixelSprite(ctx, dinoSprite, dinoX, dinoActualY, dPixelSize, activeDinoColor);
@@ -569,6 +612,15 @@ export default function GameCanvas({
 
         // Render circular reload arrow icon center screen
         drawPixelSprite(ctx, RELOAD_ICON, canvasVirtualWidth / 2 - 16, 155, 2.0, activeDinoColor);
+      } else if (s.gameState === 'victory') {
+        ctx.textAlign = 'center';
+        ctx.fillStyle = activeDinoColor;
+        ctx.font = 'bold 18px "Courier New", Courier, monospace';
+        ctx.fillText('🏆  V I C T O R Y  🏆', canvasVirtualWidth / 2, 115);
+        ctx.font = 'bold 13px "Courier New", Courier, monospace';
+        ctx.fillText('L E V E L   1 0   C L E A R E D !', canvasVirtualWidth / 2, 142);
+        ctx.font = '10px "Courier New", Courier, monospace';
+        ctx.fillText('PRESS SPACE, ENTER, OR CLICK TO PLAY AGAIN', canvasVirtualWidth / 2, 172);
       } else if (s.gameState === 'paused') {
         ctx.textAlign = 'center';
         ctx.fillStyle = activeDinoColor;
@@ -626,7 +678,7 @@ export default function GameCanvas({
             return;
           }
           const s = stateRef.current;
-          if (s.gameState === 'gameover' || s.gameState === 'idle') {
+          if (s.gameState === 'gameover' || s.gameState === 'idle' || s.gameState === 'victory') {
             e.preventDefault();
             e.stopPropagation();
             triggerJumpOrStart();
@@ -637,7 +689,7 @@ export default function GameCanvas({
             return;
           }
           const s = stateRef.current;
-          if (s.gameState === 'gameover' || s.gameState === 'idle') {
+          if (s.gameState === 'gameover' || s.gameState === 'idle' || s.gameState === 'victory') {
             e.preventDefault();
             e.stopPropagation();
             triggerJumpOrStart();
@@ -645,7 +697,7 @@ export default function GameCanvas({
         }}
         className="relative w-full overflow-hidden select-none outline-none group touch-none font-sans cursor-pointer"
       >
-        {gameState !== 'gameover' && (
+        {gameState !== 'gameover' && gameState !== 'victory' && (
           <button
             onClick={(e) => {
               e.stopPropagation();
