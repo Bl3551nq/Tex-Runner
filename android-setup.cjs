@@ -10,7 +10,24 @@ if (!fs.existsSync(androidPath)) {
   process.exit(1);
 }
 
-// 1. Create Layout file for Floating window overlay
+// 1. Create Drawable and Layout files for Floating window overlay
+const drawableDir = path.join(androidPath, 'app/src/main/res/drawable');
+fs.mkdirSync(drawableDir, { recursive: true });
+
+const moveHandleVec = `<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <path
+      android:fillColor="#FFFFFFFF"
+      android:pathData="M10,9h4V6h3l-5,-5 -5,5h3v3zm-1,1H6V7l-5,5 5,5v-3h3v-4zm14,2l-5,-5v3h-3v4h3v3l5,-5zm-9,3h-4v3H7l5,5 5,-5h-3v-3z"/>
+</vector>
+`;
+fs.writeFileSync(path.join(drawableDir, 'ic_move_handle.xml'), moveHandleVec);
+console.log('✅ Wrote ic_move_handle.xml');
+
 const layoutDir = path.join(androidPath, 'app/src/main/res/layout');
 fs.mkdirSync(layoutDir, { recursive: true });
 const layoutContent = `<?xml version="1.0" encoding="utf-8"?>
@@ -20,24 +37,29 @@ const layoutContent = `<?xml version="1.0" encoding="utf-8"?>
     android:orientation="vertical"
     android:background="@android:color/transparent">
 
-    <!-- Draggable title bar / close button for the floating game -->
+    <!-- Draggable transparent bar / close button for the floating game -->
     <RelativeLayout
+        android:id="@+id/dragArea"
         android:layout_width="match_parent"
-        android:layout_height="36dp"
-        android:background="#66000000"
+        android:layout_height="40dp"
+        android:background="@android:color/transparent"
         android:paddingHorizontal="10dp"
         android:layout_marginHorizontal="8dp"
-        android:elevation="4dp">
+        android:elevation="0dp">
 
-        <!-- Draggable handle -->
-        <View
+        <!-- Draggable crop-arrows icon handle -->
+        <ImageView
             android:id="@+id/dragHandle"
-            android:layout_width="60dp"
-            android:layout_height="4dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:layout_centerInParent="true"
-            android:background="#AAFFFFFF" />
+            android:src="@drawable/ic_move_handle"
+            android:contentDescription="Drag to move"
+            android:tint="#FFFFFF"
+            android:clickable="false"
+            android:focusable="false" />
 
-        <!-- Simple close button -->
+        <!-- Simple standalone close button -->
         <ImageButton
             android:id="@+id/btnCloseOverlay"
             android:layout_width="32dp"
@@ -175,9 +197,9 @@ class FloatingWindowService : Service() {
             stopSelf()
         }
 
-        // Implement smooth dragging behavior on drag handle
-        val dragHandle = floatingView.findViewById<View>(R.id.dragHandle)
-        dragHandle.setOnTouchListener(object : View.OnTouchListener {
+        // Implement smooth dragging behavior on the entire transparent drag area (except close button)
+        val dragArea = floatingView.findViewById<View>(R.id.dragArea)
+        dragArea.setOnTouchListener(object : View.OnTouchListener {
             private var initialX = 0
             private var initialY = 0
             private var initialTouchX = 0f

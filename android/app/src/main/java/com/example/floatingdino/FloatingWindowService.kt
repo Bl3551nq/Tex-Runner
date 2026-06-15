@@ -105,9 +105,9 @@ class FloatingWindowService : Service() {
             stopSelf()
         }
 
-        // Implement smooth dragging behavior on drag handle
-        val dragHandle = floatingView.findViewById<View>(R.id.dragHandle)
-        dragHandle.setOnTouchListener(object : View.OnTouchListener {
+        // Implement smooth dragging behavior on the entire transparent drag area (except close button)
+        val dragArea = floatingView.findViewById<View>(R.id.dragArea)
+        dragArea.setOnTouchListener(object : View.OnTouchListener {
             private var initialX = 0
             private var initialY = 0
             private var initialTouchX = 0f

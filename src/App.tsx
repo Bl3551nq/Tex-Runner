@@ -101,17 +101,17 @@ export default function App() {
             </button>
           </div>
 
-          {/* Top-Right: Monospace ultra-clean score display */}
-          <div className="flex gap-6 sm:gap-8 text-3xl sm:text-5xl font-black tracking-wider selection:bg-transparent tabular-nums items-end">
-            <span className={`text-sm sm:text-base uppercase font-bold tracking-widest mr-2 self-center ${isSystemDarkMode ? 'bg-black/40 text-white border border-white/10' : 'bg-white/40 text-[#535353] border border-[#535353]/10'} px-2.5 py-1 rounded`}>
+          {/* Top-Right: Compact monospace score display */}
+          <div className="flex gap-3 sm:gap-4 text-lg sm:text-xl font-bold tracking-wider selection:bg-transparent tabular-nums items-center">
+            <span className={`text-xs uppercase font-extrabold tracking-widest ${isSystemDarkMode ? 'bg-black/40 text-white border border-white/10' : 'bg-white/40 text-[#535353] border border-[#535353]/10'} px-2 py-0.5 rounded`}>
               LV {Math.floor(score / 200) + 1}
             </span>
             {highScore > 0 && (
-              <span className={`${secondaryTextColor} text-2xl sm:text-4xl self-center`}>
+              <span className={`${secondaryTextColor} text-[#535353]/65 text-xs sm:text-sm`}>
                 HI {String(highScore).padStart(5, '0')}
               </span>
             )}
-            <span className={`${activeLineColor} self-center`}>
+            <span className={`${activeLineColor} text-sm sm:text-base font-extrabold`}>
               {String(score).padStart(5, '0')}
             </span>
           </div>

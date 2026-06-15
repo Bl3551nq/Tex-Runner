@@ -5,24 +5,29 @@
     android:orientation="vertical"
     android:background="@android:color/transparent">
 
-    <!-- Draggable title bar / close button for the floating game -->
+    <!-- Draggable transparent bar / close button for the floating game -->
     <RelativeLayout
+        android:id="@+id/dragArea"
         android:layout_width="match_parent"
-        android:layout_height="36dp"
-        android:background="#66000000"
+        android:layout_height="40dp"
+        android:background="@android:color/transparent"
         android:paddingHorizontal="10dp"
         android:layout_marginHorizontal="8dp"
-        android:elevation="4dp">
+        android:elevation="0dp">
 
-        <!-- Draggable handle -->
-        <View
+        <!-- Draggable crop-arrows icon handle -->
+        <ImageView
             android:id="@+id/dragHandle"
-            android:layout_width="60dp"
-            android:layout_height="4dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:layout_centerInParent="true"
-            android:background="#AAFFFFFF" />
+            android:src="@drawable/ic_move_handle"
+            android:contentDescription="Drag to move"
+            android:tint="#FFFFFF"
+            android:clickable="false"
+            android:focusable="false" />
 
-        <!-- Simple close button -->
+        <!-- Simple standalone close button -->
         <ImageButton
             android:id="@+id/btnCloseOverlay"
             android:layout_width="32dp"

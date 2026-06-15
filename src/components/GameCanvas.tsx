@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, ArrowDown, ArrowUp } from 'lucide-react';
 import { ObstacleType, CloudType, ParticleType } from '../types';
 import { 
   drawPixelSprite, 
@@ -591,10 +591,10 @@ export default function GameCanvas({
     }
 
     const rect = e.currentTarget.getBoundingClientRect();
-    const relativeY = e.clientY - rect.top;
+    const relativeX = e.clientX - rect.left;
 
-    // Bottom 45% of the screen triggers ducking / bending
-    if (relativeY > rect.height * 0.55) {
+    // Left hand side (less than 50% width) bends the dino, Right hand side jumps
+    if (relativeX < rect.width * 0.5) {
       setDucking(true);
     } else {
       triggerJumpOrStart();
@@ -607,15 +607,32 @@ export default function GameCanvas({
 
   return (
     <div className="w-full flex-grow flex flex-col">
-      {/* Interactive Main Game Frame with no borders */}
+      {/* Main Game rendering stage layout, interactions moved completely to the bottom */}
       <div 
-        className="relative w-full cursor-pointer overflow-hidden select-none outline-none group touch-none"
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUpOrCancel}
-        onPointerLeave={handlePointerUpOrCancel}
-        onPointerCancel={handlePointerUpOrCancel}
-        role="button"
-        tabIndex={0}
+        onMouseDown={(e) => {
+          // If clicking on the pause button, let it handle its own event
+          if ((e.target as HTMLElement).closest('button')) {
+            return;
+          }
+          const s = stateRef.current;
+          if (s.gameState === 'gameover' || s.gameState === 'idle') {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerJumpOrStart();
+          }
+        }}
+        onTouchStart={(e) => {
+          if ((e.target as HTMLElement).closest('button')) {
+            return;
+          }
+          const s = stateRef.current;
+          if (s.gameState === 'gameover' || s.gameState === 'idle') {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerJumpOrStart();
+          }
+        }}
+        className="relative w-full overflow-hidden select-none outline-none group touch-none font-sans cursor-pointer"
       >
         {gameState !== 'gameover' && (
           <button
@@ -641,30 +658,92 @@ export default function GameCanvas({
         />
       </div>
 
-      {/* Invisible full-width touch zone that fills all space below the canvas */}
-      <div 
-        onPointerDown={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setDucking(true);
-        }}
-        onPointerUp={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setDucking(false);
-        }}
-        onPointerLeave={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setDucking(false);
-        }}
-        onPointerCancel={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setDucking(false);
-        }}
-        className="w-full flex-grow min-h-[300px] cursor-pointer touch-none select-none bg-transparent"
-      />
+      {/* Visual side-by-side Arcade Controller Division at the bottom of the screen */}
+      <div className="w-full h-24 flex touch-none select-none relative z-10 border border-[#535353]/15 dark:border-white/15 rounded-xl overflow-hidden mt-3 bg-neutral-500/5">
+        {/* Left Hand Side Button: Bend / Duck */}
+        <div 
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const s = stateRef.current;
+            if (s.gameState === 'playing') {
+              setDucking(true);
+            } else {
+              triggerJumpOrStart();
+            }
+          }}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const s = stateRef.current;
+            if (s.gameState === 'playing') {
+              setDucking(true);
+            } else {
+              triggerJumpOrStart();
+            }
+          }}
+          onMouseUp={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDucking(false);
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDucking(false);
+          }}
+          onMouseLeave={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDucking(false);
+          }}
+          onTouchCancel={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDucking(false);
+          }}
+          className="w-1/2 h-full cursor-pointer bg-transparent flex flex-col justify-center items-center border-r border-[#535353]/15 dark:border-white/15 hover:bg-[#535353]/5 dark:hover:bg-white/5 active:bg-[#535353]/15 dark:active:bg-white/15 transition-all"
+        >
+          <div className="flex flex-col items-center justify-center gap-1.5 select-none pointer-events-none">
+            <ArrowDown className="w-5 h-5 text-[#535353] dark:text-white opacity-85" />
+            <span className="text-[11px] font-mono font-extrabold tracking-widest text-[#535353] dark:text-white uppercase">
+              BEND / DUCK
+            </span>
+          </div>
+        </div>
+
+        {/* Right Hand Side Button: Jump / Start */}
+        <div 
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerJumpOrStart();
+          }}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerJumpOrStart();
+          }}
+          onMouseUp={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDucking(false);
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDucking(false);
+          }}
+          className="w-1/2 h-full cursor-pointer bg-transparent flex flex-col justify-center items-center hover:bg-[#535353]/5 dark:hover:bg-white/5 active:bg-[#535353]/15 dark:active:bg-white/15 transition-all"
+        >
+          <div className="flex flex-col items-center justify-center gap-1.5 select-none pointer-events-none">
+            <ArrowUp className="w-5 h-5 text-[#535353] dark:text-white opacity-85" />
+            <span className="text-[11px] font-mono font-extrabold tracking-widest text-[#535353] dark:text-white uppercase">
+              JUMP / START
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
