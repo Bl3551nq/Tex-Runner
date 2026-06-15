@@ -146,7 +146,7 @@ export default function GameCanvas({
       const s = stateRef.current;
       if (e.repeat) return;
 
-      if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === 'Enter') {
         e.preventDefault();
         triggerJumpOrStart();
       }
@@ -382,7 +382,7 @@ export default function GameCanvas({
         s.nextObstacleTimer--;
         if (s.nextObstacleTimer <= 0) {
           // Determine spawn candidates: Small Cactus, Large Cactus, Bird (increasing spawn rate by level)
-          const currentLevel = Math.floor(s.score / 200) + 1;
+          const currentLevel = Math.min(10, Math.floor(s.score / 200) + 1);
           const allowPterodactyl = currentLevel >= 2;
           const choice = Math.random();
 

@@ -46,7 +46,8 @@ jobs:
       - name: Regenerate Gradle Wrapper to fix corrupt jar
         run: |
           cd android
-          gradle wrapper --gradle-version 8.14.3
+          chmod +x gradlew
+          ./gradlew wrapper --gradle-version 8.14.3
 
       - name: Set Execution Permission for Gradle Wrapper
         run: chmod +x android/gradlew

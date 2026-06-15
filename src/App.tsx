@@ -215,7 +215,7 @@ export default function App() {
           {/* Top-Right: Compact monospace score display */}
           <div className="flex gap-3 sm:gap-4 text-lg sm:text-xl font-bold tracking-wider selection:bg-transparent tabular-nums items-center">
             <span className={`text-xs uppercase font-extrabold tracking-widest ${isSystemDarkMode ? 'bg-black/40 text-white border border-white/10' : 'bg-white/40 text-[#535353] border border-[#535353]/10'} px-2 py-0.5 rounded`}>
-              LV {Math.floor(score / 200) + 1}
+              LV {Math.min(10, Math.floor(score / 200) + 1)}
             </span>
             {highScore > 0 && (
               <span className={`${secondaryTextColor} text-[#535353]/65 text-xs sm:text-sm`}>
