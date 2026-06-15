@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import GameCanvas from './components/GameCanvas';
 import { isMuted, toggleMute, playClickSound } from './utils/audio';
-import { Volume2, VolumeX, Moon, Sun, RefreshCw } from 'lucide-react';
+import { Volume2, VolumeX, Moon, Sun, RefreshCw, Move } from 'lucide-react';
 
 export default function App() {
   const [score, setScore] = useState(0);
@@ -53,6 +53,42 @@ export default function App() {
     localStorage.setItem('dino_chrome_mute_mode', String(nextMuted));
   };
 
+  // Moveable positions state
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const positionStart = useRef({ x: 0, y: 0 });
+
+  const handleDragStart = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    positionStart.current = { ...position };
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch (err) {}
+  };
+
+  const handleDragMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStart.current.x;
+    const dy = e.clientY - dragStart.current.y;
+    setPosition({
+      x: positionStart.current.x + dx,
+      y: positionStart.current.y + dy
+    });
+  };
+
+  const handleDragEnd = (e: React.PointerEvent) => {
+    if (isDragging) {
+      setIsDragging(false);
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch (err) {}
+    }
+  };
+
   const handleToggleDarkLightPreference = () => {
     playClickSound();
     const nextDark = !isSystemDarkMode;
@@ -71,12 +107,34 @@ export default function App() {
     <div className={`min-h-screen transition-colors duration-500 flex flex-col items-center justify-start p-4 font-sans select-none ${pageBgClass}`}>
       
       {/* Centralized immersive full-screen container */}
-      <div className="w-full max-w-[1440px] flex flex-col flex-grow gap-4">
+      <div 
+        style={{
+          transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+          transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+        }}
+        className="w-full max-w-[1440px] flex flex-col flex-grow gap-4 relative"
+      >
         
         {/* Top bar with minimal controls and transparent scoreboard */}
         <div className="flex justify-between items-center w-full px-4 font-mono select-none">
           {/* Top-Left: Mode Toggle & Audio Controls */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* Moveable controller icon */}
+            <button
+              onPointerDown={handleDragStart}
+              onPointerMove={handleDragMove}
+              onPointerUp={handleDragEnd}
+              onPointerCancel={handleDragEnd}
+              className={`p-2 rounded-lg border border-neutral-500/10 cursor-grab active:cursor-grabbing flex items-center justify-center transition-all touch-none select-none ${
+                isSystemDarkMode 
+                  ? 'bg-black/30 text-[#e8eaed] hover:bg-black/50 hover:border-white/10 active:scale-95' 
+                  : 'bg-white/30 text-[#535353] hover:bg-white/50 hover:border-black/10 active:scale-95'
+              }`}
+              title="Drag to move game"
+            >
+              <Move className="w-4 h-4" />
+            </button>
+
             <button
               onClick={handleToggleDarkLightPreference}
               className={`p-2 rounded-lg border border-neutral-500/10 cursor-pointer flex items-center justify-center transition-all ${

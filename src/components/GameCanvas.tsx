@@ -73,9 +73,9 @@ export default function GameCanvas({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Hardcoded physical sizes to matches the original game coordinates
-  const groundY = 230; // Dino ground level
+  const groundY = 300; // Dino ground level
   const canvasVirtualWidth = 600;
-  const canvasVirtualHeight = 260;
+  const canvasVirtualHeight = 340;
 
   // Mutable game loop environment
   const stateRef = useRef({
@@ -89,6 +89,7 @@ export default function GameCanvas({
     dinoVy: 0,
     isJumping: false,
     isDucking: false,
+    jumpCount: 0,
     obstacles: [] as ObstacleType[],
     clouds: [] as CloudType[],
     stars: [] as { x: number; y: number; brightness: number }[],
@@ -168,10 +169,18 @@ export default function GameCanvas({
   const triggerJumpOrStart = () => {
     const s = stateRef.current;
     if (s.gameState === 'playing') {
-        if (!s.isJumping && !s.isDucking) {
-          s.dinoVy = -11.5; // Classic high jump strength
-          s.isJumping = true;
-          playJumpSound();
+        if (!s.isDucking) {
+          if (!s.isJumping) {
+            s.dinoVy = -11.5; // Classic high jump strength
+            s.isJumping = true;
+            s.jumpCount = 1;
+            playJumpSound();
+          } else if (s.jumpCount < 2) {
+            // Mid-air second jump (Double Jump)
+            s.dinoVy = -10.5; // Agile mid-air second jump strength
+            s.jumpCount = 2;
+            playJumpSound();
+          }
         }
     } else if (s.gameState === 'idle') {
       resetGame();
@@ -203,6 +212,7 @@ export default function GameCanvas({
     s.dinoVy = 0;
     s.isJumping = false;
     s.isDucking = false;
+    s.jumpCount = 0;
     s.obstacles = [];
     s.flashScoreTimer = 0;
     s.isNightMode = false;
@@ -316,6 +326,7 @@ export default function GameCanvas({
             s.dinoY = 0;
             s.dinoVy = 0;
             s.isJumping = false;
+            s.jumpCount = 0; // Reset jump counter when touching ground
           }
         }
 
@@ -554,17 +565,17 @@ export default function GameCanvas({
         ctx.textAlign = 'center';
         ctx.fillStyle = activeDinoColor;
         ctx.font = 'bold 15px "Courier New", Courier, monospace';
-        ctx.fillText('G A M E   O V E R', canvasVirtualWidth / 2, 100);
+        ctx.fillText('G A M E   O V E R', canvasVirtualWidth / 2, 130);
 
         // Render circular reload arrow icon center screen
-        drawPixelSprite(ctx, RELOAD_ICON, canvasVirtualWidth / 2 - 16, 125, 2.0, activeDinoColor);
+        drawPixelSprite(ctx, RELOAD_ICON, canvasVirtualWidth / 2 - 16, 155, 2.0, activeDinoColor);
       } else if (s.gameState === 'paused') {
         ctx.textAlign = 'center';
         ctx.fillStyle = activeDinoColor;
         ctx.font = 'bold 18px "Courier New", Courier, monospace';
-        ctx.fillText('P A U S E D', canvasVirtualWidth / 2, 105);
+        ctx.fillText('P A U S E D', canvasVirtualWidth / 2, 135);
         ctx.font = '11px "Courier New", Courier, monospace';
-        ctx.fillText('PRESS ESC, P, OR CLICK TO RESUME', canvasVirtualWidth / 2, 135);
+        ctx.fillText('PRESS ESC, P, OR CLICK TO RESUME', canvasVirtualWidth / 2, 165);
       }
 
       ctx.restore();
@@ -654,7 +665,7 @@ export default function GameCanvas({
         <canvas
           ref={canvasRef}
           className="w-full h-auto block max-w-full"
-          style={{ aspectRatio: '600 / 260', imageRendering: 'pixelated' }}
+          style={{ aspectRatio: '600 / 340', imageRendering: 'pixelated' }}
         />
       </div>
 
