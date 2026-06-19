@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Play, Pause, ArrowDown, ArrowUp } from 'lucide-react';
+import { Play, Pause } from 'lucide-react';
 import { ObstacleType, CloudType, ParticleType } from '../types';
 import { 
   drawPixelSprite, 
@@ -697,7 +697,7 @@ export default function GameCanvas({
         }}
         className="relative w-full overflow-hidden select-none outline-none group touch-none font-sans cursor-pointer"
       >
-        {gameState !== 'gameover' && gameState !== 'victory' && (
+        {gameState !== 'victory' && gameState !== 'gameover' && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -714,15 +714,31 @@ export default function GameCanvas({
             )}
           </button>
         )}
+        {gameState === 'gameover' && (
+          <div className="w-full flex flex-col justify-center items-center py-4 animate-fade-in bg-transparent" style={{ aspectRatio: '600 / 340' }}>
+            <div className="relative max-w-full flex justify-center items-center">
+              <img 
+                src="/failed_to_run.svg" 
+                alt="Game Over - T-Rex Failed to Run" 
+                style={isSystemDarkMode 
+                  ? { filter: 'invert(1) hue-rotate(180deg)', mixBlendMode: 'screen' }
+                  : { mixBlendMode: 'multiply' }
+                }
+                className="max-h-[75vh] sm:max-h-[85vh] w-auto object-contain transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] select-none bg-transparent"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          </div>
+        )}
         <canvas
           ref={canvasRef}
-          className="w-full h-auto block max-w-full"
+          className={`w-full h-auto block max-w-full ${gameState === 'gameover' ? 'hidden' : ''}`}
           style={{ aspectRatio: '600 / 340', imageRendering: 'pixelated' }}
         />
       </div>
 
-      {/* Visual side-by-side Arcade Controller Division at the bottom of the screen */}
-      <div className="w-full h-24 flex touch-none select-none relative z-10 border border-[#535353]/15 dark:border-white/15 rounded-xl overflow-hidden mt-3 bg-neutral-500/5">
+      {/* Invisible side-by-side Controller Division at the bottom of the screen */}
+      <div className="w-full h-24 flex touch-none select-none relative z-10 mt-3 bg-transparent">
         {/* Left Hand Side Button: Bend / Duck */}
         <div 
           onMouseDown={(e) => {
@@ -765,15 +781,8 @@ export default function GameCanvas({
             e.stopPropagation();
             setDucking(false);
           }}
-          className="w-1/2 h-full cursor-pointer bg-transparent flex flex-col justify-center items-center border-r border-[#535353]/15 dark:border-white/15 hover:bg-[#535353]/5 dark:hover:bg-white/5 active:bg-[#535353]/15 dark:active:bg-white/15 transition-all"
-        >
-          <div className="flex flex-col items-center justify-center gap-1.5 select-none pointer-events-none">
-            <ArrowDown className="w-5 h-5 text-[#535353] dark:text-white opacity-85" />
-            <span className="text-[11px] font-mono font-extrabold tracking-widest text-[#535353] dark:text-white uppercase">
-              BEND / DUCK
-            </span>
-          </div>
-        </div>
+          className="w-1/2 h-full cursor-pointer bg-transparent"
+        />
 
         {/* Right Hand Side Button: Jump / Start */}
         <div 
@@ -797,15 +806,8 @@ export default function GameCanvas({
             e.stopPropagation();
             setDucking(false);
           }}
-          className="w-1/2 h-full cursor-pointer bg-transparent flex flex-col justify-center items-center hover:bg-[#535353]/5 dark:hover:bg-white/5 active:bg-[#535353]/15 dark:active:bg-white/15 transition-all"
-        >
-          <div className="flex flex-col items-center justify-center gap-1.5 select-none pointer-events-none">
-            <ArrowUp className="w-5 h-5 text-[#535353] dark:text-white opacity-85" />
-            <span className="text-[11px] font-mono font-extrabold tracking-widest text-[#535353] dark:text-white uppercase">
-              JUMP / START
-            </span>
-          </div>
-        </div>
+          className="w-1/2 h-full cursor-pointer bg-transparent"
+        />
       </div>
     </div>
   );

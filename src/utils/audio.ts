@@ -79,10 +79,24 @@ export function playMilestoneSound() {
 export function playCrashSound() {
   if (isMutedRef.current) return;
   try {
+    const audio = new Audio('/game_over_sound.wav');
+    audio.volume = 0.45;
+    audio.play().catch(e => {
+      console.warn('WAV game over sound failed, playing synth:', e);
+      playCrashSoundSynth();
+    });
+  } catch (e) {
+    console.warn('Failed to initialize Audio object, playing synth:', e);
+    playCrashSoundSynth();
+  }
+}
+
+function playCrashSoundSynth() {
+  try {
     const ctx = getAudioContext();
     const now = ctx.currentTime;
     
-    // Low rumble with decay
+    // 1. Initial low rumble/explosion crash with decay
     const osc = ctx.createOscillator();
     const gainNode = ctx.createGain();
     osc.connect(gainNode);
@@ -90,16 +104,16 @@ export function playCrashSound() {
 
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(120, now);
-    osc.frequency.linearRampToValueAtTime(40, now + 0.4);
+    osc.frequency.linearRampToValueAtTime(40, now + 0.3);
 
-    gainNode.gain.setValueAtTime(0.2, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    gainNode.gain.setValueAtTime(0.18, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
 
     osc.start();
-    osc.stop(now + 0.4);
+    osc.stop(now + 0.3);
 
-    // Optional noise generation for explosion crispiness
-    const bufferSize = ctx.sampleRate * 0.2; // 200ms of noise
+    // 2. White noise burst for the explosion texture
+    const bufferSize = ctx.sampleRate * 0.15; // 150ms of noise
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -111,18 +125,48 @@ export function playCrashSound() {
 
     const noiseFilter = ctx.createBiquadFilter();
     noiseFilter.type = 'lowpass';
-    noiseFilter.frequency.setValueAtTime(400, now);
+    noiseFilter.frequency.setValueAtTime(300, now);
 
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.15, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    noiseGain.gain.setValueAtTime(0.12, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
 
     noiseNode.connect(noiseFilter);
     noiseFilter.connect(noiseGain);
     noiseGain.connect(ctx.destination);
 
     noiseNode.start(now);
-    noiseNode.stop(now + 0.2);
+    noiseNode.stop(now + 0.15);
+
+    // 3. Sad Retro Descending Melodic Tune! (Plays slightly after the crash)
+    const notes = [261.63, 246.94, 220.00, 196.00]; // frequencies for C4, B3, A3, G3
+    const durations = [0.15, 0.15, 0.15, 0.4];
+    const delays = [0.15, 0.30, 0.45, 0.60];
+
+    notes.forEach((freq, idx) => {
+      const noteTime = now + delays[idx];
+      const duration = durations[idx];
+      
+      const noteOsc = ctx.createOscillator();
+      const noteGain = ctx.createGain();
+      
+      noteOsc.connect(noteGain);
+      noteGain.connect(ctx.destination);
+      
+      noteOsc.type = 'triangle'; // triangle gives a warm retro synth feel
+      noteOsc.frequency.setValueAtTime(freq, noteTime);
+      
+      if (idx === notes.length - 1) {
+        // Last note slides down dramatically
+        noteOsc.frequency.linearRampToValueAtTime(130.00, noteTime + duration);
+      }
+      
+      noteGain.gain.setValueAtTime(0.12, noteTime);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, noteTime + duration);
+      
+      noteOsc.start(noteTime);
+      noteOsc.stop(noteTime + duration);
+    });
   } catch (e) {
     console.warn('Audio play failed:', e);
   }
