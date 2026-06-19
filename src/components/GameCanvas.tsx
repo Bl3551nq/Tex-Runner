@@ -10,7 +10,7 @@ import {
   BIRD_WINGS_UP, BIRD_WINGS_DOWN,
   CLOUD
 } from '../utils/sprites';
-import { playJumpSound, playCrashSound, playMilestoneSound } from '../utils/audio';
+import { playJumpSound, playCrashSound, playMilestoneSound, stopCrashSound } from '../utils/audio';
 
 // Custom Crescent Moon sprite for dark mode night cycles
 const CONST_MOON: string[] = [
@@ -214,6 +214,7 @@ export default function GameCanvas({
   };
 
   const resetGame = () => {
+    stopCrashSound();
     const s = stateRef.current;
     s.gameState = 'playing';
     s.score = 0;

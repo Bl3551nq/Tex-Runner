@@ -118,7 +118,7 @@ export default function App() {
   const activeLineColor = isSystemDarkMode ? 'text-[#e8eaed]' : 'text-[#535353]';
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 flex flex-col items-center justify-start p-4 font-sans select-none ${pageBgClass}`}>
+    <div className={`w-full h-full max-h-screen overflow-hidden transition-colors duration-500 flex flex-col items-center justify-start p-4 font-sans select-none ${pageBgClass}`}>
       
       {/* Centralized immersive full-screen container */}
       <div 

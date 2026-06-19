@@ -1,6 +1,19 @@
 // Web Audio API Retro Sound Effects Client
 let audioCtx: AudioContext | null = null;
 let isMutedRef = { current: false };
+let activeCrashAudio: HTMLAudioElement | null = null;
+
+export function stopCrashSound() {
+  if (activeCrashAudio) {
+    try {
+      activeCrashAudio.pause();
+      activeCrashAudio.currentTime = 0;
+    } catch (e) {
+      console.warn('Failed to stop crash sound:', e);
+    }
+    activeCrashAudio = null;
+  }
+}
 
 export function toggleMute(): boolean {
   isMutedRef.current = !isMutedRef.current;
@@ -78,9 +91,11 @@ export function playMilestoneSound() {
 
 export function playCrashSound() {
   if (isMutedRef.current) return;
+  stopCrashSound();
   try {
     const audio = new Audio('/game_over_sound.wav');
     audio.volume = 0.45;
+    activeCrashAudio = audio;
     audio.play().catch(e => {
       console.warn('WAV game over sound failed, playing synth:', e);
       playCrashSoundSynth();
